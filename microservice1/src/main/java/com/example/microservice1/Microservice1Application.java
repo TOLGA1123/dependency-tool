@@ -14,9 +14,12 @@ public class Microservice1Application implements CommandLineRunner {
 	 
 	@Autowired
     private PomFileScanner pomFileScanner;
+    
     @Value("${project.root}")
     private String rootDirectoryPath;
     
+    @Autowired
+    private PomParser pomParser;
 	public static void main(String[] args) {
 		SpringApplication.run(Microservice1Application.class, args);
 	}
@@ -34,6 +37,11 @@ public class Microservice1Application implements CommandLineRunner {
         System.out.println("Found POM files:");
         for (File pomFile : pomFiles) {
             System.out.println(pomFile.getAbsolutePath());
+            List<Dependency> dependencies = pomParser.parseDependencies(pomFile);
+            System.out.println("Dependencies:");
+            for (Dependency dependency : dependencies) {
+                System.out.println(dependency);
+            }
         }
     }
 }
