@@ -1,5 +1,17 @@
-{"properties": [{
-  "name": "project.root",
-  "type": "java.lang.String",
-  "description": "A description for 'project.root'"
-}]}
+{"properties": [
+  {
+    "name": "project.root",
+    "type": "java.lang.String",
+    "description": "A description for 'project.root'"
+  },
+  {
+    "name": "nexus.repository",
+    "type": "java.lang.String",
+    "description": "A description for 'nexus.repository'"
+  },
+  {
+    "name": "nexus.url",
+    "type": "java.lang.String",
+    "description": "A description for 'nexus.url'"
+  }
+]}
