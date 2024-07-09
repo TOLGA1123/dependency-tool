@@ -11,16 +11,29 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.example.microservice1.service.DependencyUpdateService;
 import com.example.microservice1.service.NexusService;
 
 @SpringBootApplication
 public class Microservice1Application implements CommandLineRunner {
-	 
-	@Autowired
+	 @Autowired
+    private DependencyUpdateService dependencyUpdateService;
+
+    public static void main(String[] args) {
+        SpringApplication.run(Microservice1Application.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws IOException {
+        String currentDir = System.getProperty("user.dir");
+        dependencyUpdateService.updateDependencies(currentDir);
+    }
+}
+	/*@Autowired
     private PomFileScanner pomFileScanner;
     
     /*@Value("${project.root}")
-    private String rootDirectoryPath;*/
+    private String rootDirectoryPath;
     
     @Autowired
     private PomParser pomParser;
@@ -32,10 +45,10 @@ public class Microservice1Application implements CommandLineRunner {
 	}
 	@Override
     public void run(String... args) throws IOException {
-        /*if (args.length < 1) {
+        if (args.length < 1) {
             System.out.println("Please provide the root directory path.");
             return;
-        }*/
+        }
 
         //String rootDirectoryPath = "C:\\Users\\USER\\Desktop\\dependency-tool";
         //String rootDirectoryPath = System.getProperty("user.dir");
@@ -54,9 +67,13 @@ public class Microservice1Application implements CommandLineRunner {
             System.out.println("Dependencies:");
             for (Dependency dependency : dependencies) {
                 System.out.println(dependency);
+                 // Fetch dependencies for each group ID
+                 String groupId = dependency.getGroupId();
+                 List<String> fetchedDependencies = nexusService.fetchDependencies(groupId);
+                 System.out.println("Fetched Dependencies for groupId " + groupId + ": " + fetchedDependencies);
             }
-        }
-        List<String> fetchedDependencies = nexusService.fetchDependencies("org.apache");
+        }*/
+        /*List<String> fetchedDependencies = nexusService.fetchDependencies("org.apache");
         System.out.println("Fetched Dependencies: " + fetchedDependencies);
     }
-}
+}*/

@@ -64,7 +64,12 @@ public class PomParser {
                 String version = getElementTextContent(dependencyElement, "version", xPath);
 
                 if (groupId != null && artifactId != null) {
-                    dependencies.add(new Dependency(groupId, artifactId, version));
+                    if (version != null) {
+                        dependencies.add(new Dependency(groupId, artifactId, version));
+                    } else {
+                        // Handle the case where version is null
+                        dependencies.add(new Dependency(groupId, artifactId, "Unknown"));
+                    }
                 }
             }
         } catch (ParserConfigurationException | SAXException | IOException | XPathExpressionException e) {

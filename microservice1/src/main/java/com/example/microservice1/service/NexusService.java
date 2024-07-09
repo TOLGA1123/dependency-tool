@@ -1,5 +1,6 @@
 package com.example.microservice1.service;
 
+import com.example.microservice1.Dependency;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -28,8 +29,8 @@ public class NexusService {
         this.objectMapper = objectMapper;
     }
 
-    public List<String> fetchDependencies(String groupId) throws IOException {
-        List<String> dependencies = new ArrayList<>();
+    public List<Dependency> fetchDependencies(String groupId) throws IOException {
+        List<Dependency> dependencies = new ArrayList<>();
         String url = String.format("%s/service/rest/v1/search?repository=%s&group=%s", nexusUrl, repository, groupId);
 
         try (CloseableHttpClient client = HttpClients.createDefault()) {
@@ -41,7 +42,12 @@ public class NexusService {
                     for (JsonNode item : items) {
                         String artifactId = item.path("artifactId").asText();
                         String version = item.path("version").asText();
-                        dependencies.add(String.format("%s:%s:%s", groupId, artifactId, version));
+                        if (version != null) {
+                            dependencies.add(new Dependency(groupId, artifactId, version));
+                        } else {
+                            // Handle the case where version is null
+                            dependencies.add(new Dependency(groupId, artifactId, "Unknown"));
+                        }
                     }
                 }
             }
