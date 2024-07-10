@@ -29,9 +29,9 @@ public class NexusService {
         this.objectMapper = objectMapper;
     }
 
-    public List<Dependency> fetchDependencies(String groupId) throws IOException {
+    public List<Dependency> fetchDependencies(String groupId, String artifactId) throws IOException {
         List<Dependency> dependencies = new ArrayList<>();
-        String url = String.format("%s/service/rest/v1/search?repository=%s&group=%s", nexusUrl, repository, groupId);
+        String url = String.format("%s/service/rest/v1/search?repository=%s&group=%s&name=%s", nexusUrl, repository, groupId, artifactId);
 
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpGet request = new HttpGet(url);
@@ -40,14 +40,16 @@ public class NexusService {
                 JsonNode items = rootNode.path("items");
                 if (items.isArray()) {
                     for (JsonNode item : items) {
-                        String artifactId = item.path("artifactId").asText();
-                        String version = item.path("version").asText();
-                        if (version != null) {
+                        String artifactId1 = item.path("artifactId").asText();
+                        JsonNode versionNode = item.path("version");
+                        String version = versionNode.isMissingNode() ? "Unknown" : versionNode.asText();
+                        dependencies.add(new Dependency(groupId, artifactId1, version));
+                        /*if (version != null) {
                             dependencies.add(new Dependency(groupId, artifactId, version));
                         } else {
                             // Handle the case where version is null
                             dependencies.add(new Dependency(groupId, artifactId, "Unknown"));
-                        }
+                        }*/
                     }
                 }
             }

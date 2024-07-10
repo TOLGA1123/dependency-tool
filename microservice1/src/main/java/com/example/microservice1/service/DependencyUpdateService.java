@@ -3,6 +3,8 @@ package com.example.microservice1.service;
 import com.example.microservice1.Dependency;
 import com.example.microservice1.PomFileScanner;
 import com.example.microservice1.PomParser;
+import com.example.microservice1.PomUpdater;
+
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,9 @@ public class DependencyUpdateService {
     @Autowired
     private NexusService nexusService;
 
+    @Autowired
+    private PomUpdater pomUpdater;
+
     public void updateDependencies(String rootDir) throws IOException {
         File currentDirFile = new File(rootDir);
         File parentDirFile = currentDirFile.getParentFile();
@@ -36,19 +41,23 @@ public class DependencyUpdateService {
             System.out.println("Dependencies:");
             for (Dependency dependency : dependencies) {
                 System.out.println(dependency);
-                List<Dependency> fetchedDependencies = nexusService.fetchDependencies(dependency.getGroupId());
+                if(dependency.getVersion().equals("Unknown")){
+                    continue;
+                }
+                List<Dependency> fetchedDependencies = nexusService.fetchDependencies(dependency.getGroupId(), dependency.getArtifactId());
                 System.out.println("Fetched Dependencies: " + fetchedDependencies);
 
                 for (Dependency fetchedDependency : fetchedDependencies) {
                     //String[] parts = fetchedDependency.split(":");
                     String fetchedVersion = fetchedDependency.getVersion();
-
                     ComparableVersion currentVersion = new ComparableVersion(dependency.getVersion());
                     ComparableVersion latestVersion = new ComparableVersion(fetchedVersion);
 
                     if (currentVersion.compareTo(latestVersion) < 0) {
                         System.out.println("Newer version available for " + dependency + ": " + fetchedVersion);
                         // Logic to update the POM file with the new version
+                        pomUpdater.updateDependencyVersion(pomFile, dependency, fetchedVersion);
+                        System.out.println("Dependency " + dependency + " updated with never version: " + fetchedVersion);
                     }
                 }
             }
