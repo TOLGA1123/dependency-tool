@@ -3,12 +3,15 @@ package com.example.microservice1.controller;
 import java.io.File;
 import java.io.IOException;
 
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.extern.slf4j.Slf4j;
+import com.example.microservice1.Dependency;
 import com.example.microservice1.service.DependencyUpdateService;
+import com.example.microservice1.service.ParentPomReaderService;
 
 @RestController
 @Slf4j
@@ -17,9 +20,12 @@ public class DependencyController {
     @Autowired
     private DependencyUpdateService dependencyUpdateService;
 
+    @Autowired
+    private ParentPomReaderService parentPomService;
+
     // Update dependencies for a specific microservice
     @GetMapping("/update/{microserviceName}")       //http://localhost:8080/update/microservice2 or http://localhost:8080/update/microservice1
-    public String updateDependencies(@PathVariable String microserviceName) {
+    public String updateDependencies(@PathVariable String microserviceName) throws XmlPullParserException {
         try {
             String currentDir = System.getProperty("user.dir");
             String[] dir = currentDir.split("microservice1");
@@ -34,7 +40,7 @@ public class DependencyController {
     }
      // Update dependencies for all microservices
      @GetMapping("/update/all")
-     public String updateAllMicroservices() {
+     public String updateAllMicroservices() throws XmlPullParserException {
          try{
             String currentDir = System.getProperty("user.dir");
             File currentDirFile = new File(currentDir);
@@ -48,4 +54,13 @@ public class DependencyController {
              return "Failed to update dependencies for all microservices. Check logs for details.";
         }
      }
+      @GetMapping("/parent-pom-details/{pomFilePath}")
+    public String getParentPomDetails(@PathVariable String pomFilePath) {
+        try {
+            return parentPomService.getLastParentPomDetails(pomFilePath);
+        } catch (IOException | XmlPullParserException e) {
+            log.error("Error fetching parent POM details: {}", e.getMessage());
+            return null;
+        }
+    }
 }

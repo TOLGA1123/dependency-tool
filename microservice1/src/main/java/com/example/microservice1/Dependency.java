@@ -50,4 +50,8 @@ public class Dependency {
     public String getVersion(){
         return version;
     }
+
+    public void setVersion(String dependencyVersion) {
+        this.version = dependencyVersion;
+    }
 }

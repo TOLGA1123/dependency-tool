@@ -6,6 +6,7 @@ import com.example.microservice1.PomParser;
 import com.example.microservice1.PomUpdater;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,9 @@ public class DependencyUpdateService {
     @Autowired
     private PomUpdater pomUpdater;
 
-    public void updateDependencies(String rootDir) throws IOException {
+    @Autowired
+    private ParentPomReaderService parentPomReaderService;
+    public void updateDependencies(String rootDir) throws IOException, XmlPullParserException {
         File currentDirFile = new File(rootDir);
         //File parentDirFile = currentDirFile.getParentFile();
         //log.info("Parent directory: {}", parentDirFile);
@@ -41,10 +44,14 @@ public class DependencyUpdateService {
             List<Dependency> dependencies = pomParser.parseDependencies(pomFile);
             log.info("Dependencies:");
             for (Dependency dependency : dependencies) {
-                log.info("{}", dependency);
+                //log.info("{}", dependency);
                 if(dependency.getVersion().equals("Unknown")){
-                    continue;
+                    //continue;
+                    String parentUrl = parentPomReaderService.getLastParentPomDetails(pomFile.getAbsolutePath());
+                    dependency.setVersion(parentPomReaderService.findDependencyVersion(dependency.getGroupId(), dependency.getArtifactId(), parentUrl));
+
                 }
+                log.info("{}", dependency);
                 List<Dependency> fetchedDependencies = nexusService.fetchDependencies(dependency.getGroupId(), dependency.getArtifactId());
                 log.info("Fetched Dependencies: ");
                 for(Dependency fetched: fetchedDependencies){
@@ -54,6 +61,9 @@ public class DependencyUpdateService {
                 /*for (Dependency fetchedDependency : fetchedDependencies) {
                     //String[] parts = fetchedDependency.split(":");*/
                     int lastIndex = fetchedDependencies.size() - 1;     //Fetched dependencies is already sorted with version number
+                    if(lastIndex == -1){
+                        continue;
+                    }
                     Dependency latestDependency = fetchedDependencies.get(lastIndex);
                     String fetchedVersion = latestDependency.getVersion();
                     ComparableVersion currentVersion = new ComparableVersion(dependency.getVersion());
@@ -72,4 +82,5 @@ public class DependencyUpdateService {
             }
         }
     }
+    
 }

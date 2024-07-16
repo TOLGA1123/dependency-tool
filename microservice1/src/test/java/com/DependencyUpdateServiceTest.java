@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -46,7 +47,7 @@ public class DependencyUpdateServiceTest {
     }
 
     @Test
-    public void testUpdateDependencies() throws IOException {
+    public void testUpdateDependencies() throws IOException, XmlPullParserException {
         String rootDir = "testRootDir";
         File mockPomFile = new File("mockPom.xml");
         List<File> mockPomFiles = Arrays.asList(mockPomFile);
