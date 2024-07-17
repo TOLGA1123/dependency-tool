@@ -47,7 +47,7 @@ public class DependencyUpdateService {
                 //log.info("{}", dependency);
                 if(dependency.getVersion().equals("Unknown")){
                     //continue;
-                    String parentUrl = parentPomReaderService.getLastParentPomDetails(pomFile.getAbsolutePath());
+                    String parentUrl = parentPomReaderService.getParentPomDetails(pomFile.getAbsolutePath());
                     dependency.setVersion(parentPomReaderService.findDependencyVersion(dependency.getGroupId(), dependency.getArtifactId(), parentUrl));
 
                 }

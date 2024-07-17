@@ -64,11 +64,11 @@
         <artifactId>maven-model-builder</artifactId>
         <version>3.8.6</version>
     </dependency>
-    <dependency>
+    <!--<dependency>
     <groupId>org.codehaus.plexus</groupId>
     <artifactId>plexus-utils</artifactId>
-    <version>3.3.0</version>        <!-- it updates this and causes errors? -->
-</dependency>
+    <version>3.3.0</version>         it updates this and causes errors?
+</dependency>-->
 
     </dependencies>
     <build>

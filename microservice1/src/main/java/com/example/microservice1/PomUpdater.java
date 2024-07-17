@@ -34,8 +34,10 @@ public class PomUpdater {
                 String artifactId = element.getElementsByTagName("artifactId").item(0).getTextContent();
 
                 if (dependency.getGroupId().equals(groupId) && dependency.getArtifactId().equals(artifactId)) {
-                    element.getElementsByTagName("version").item(0).setTextContent(newVersion);
-                    break;
+                    if(element.getElementsByTagName("version").item(0) != null){
+                        element.getElementsByTagName("version").item(0).setTextContent(newVersion);
+                        break;
+                    }
                 }
             }
 

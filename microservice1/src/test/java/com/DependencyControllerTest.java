@@ -19,7 +19,7 @@ import com.example.microservice1.service.DependencyUpdateService;
 import java.io.IOException;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
+//mvn test
 public class DependencyControllerTest {
 
     @InjectMocks
@@ -56,6 +56,29 @@ public class DependencyControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Failed to update dependencies for microservice: microservice2. Check logs for details."));
+
+        verify(dependencyUpdateService, times(1)).updateDependencies(anyString());
+    }
+    @Test
+    public void testUpdateAllMicroservices() throws Exception {
+        doNothing().when(dependencyUpdateService).updateDependencies(anyString());
+
+        mockMvc.perform(get("/update/all")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Successfully updated dependencies for all microservices."));
+
+        verify(dependencyUpdateService, times(1)).updateDependencies(anyString());
+    }
+
+    @Test
+    public void testUpdateAllMicroservicesException() throws Exception {
+        doThrow(new IOException("Test Exception")).when(dependencyUpdateService).updateDependencies(anyString());
+
+        mockMvc.perform(get("/update/all")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Failed to update dependencies for all microservices. Check logs for details."));
 
         verify(dependencyUpdateService, times(1)).updateDependencies(anyString());
     }

@@ -57,7 +57,7 @@ public class DependencyController {
       @GetMapping("/parent-pom-details/{pomFilePath}")
     public String getParentPomDetails(@PathVariable String pomFilePath) {
         try {
-            return parentPomService.getLastParentPomDetails(pomFilePath);
+            return parentPomService.getParentPomDetails(pomFilePath);
         } catch (IOException | XmlPullParserException e) {
             log.error("Error fetching parent POM details: {}", e.getMessage());
             return null;

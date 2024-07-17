@@ -18,15 +18,71 @@ import java.util.Properties;
 @Service
 public class ParentPomReaderService {
 
-    public String getLastParentPomDetails(String pomFilePath) throws IOException, XmlPullParserException {
+    public String getParentPomDetails(String pomFilePath) throws IOException, XmlPullParserException {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         Model model = reader.read(new FileReader(pomFilePath));
-        String parentPomUrl = "";
+        if (model.getParent() != null) {
+            String parentPomUrl = String.format("https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom",
+                    model.getParent().getGroupId().replace('.', '/'),
+                    model.getParent().getArtifactId(),
+                    model.getParent().getVersion(),
+                    model.getParent().getArtifactId(),
+                    model.getParent().getVersion());
+            return parentPomUrl;
+        }
+        return null;
+    }
 
-        // Navigate through parent POMs
-        while (model.getParent() != null) {
+    public String findDependencyVersion(String groupId, String artifactId, String pomFilePath) throws IOException, XmlPullParserException {
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        System.out.println(pomFilePath);
+        URL url = new URL(pomFilePath); // Convert the URL string to URL object
+        try (InputStreamReader readerStream = new InputStreamReader(url.openStream())) {
+            Model model = reader.read(readerStream);
+            return findDependencyVersionRecursive(groupId, artifactId, model);
+        }
+    }
+    
 
-            parentPomUrl = String.format("https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom",
+    private String findDependencyVersionRecursive(String groupId, String artifactId, Model model) throws IOException, XmlPullParserException {
+        Properties properties = model.getProperties();
+
+        // Check direct dependencies
+        List<org.apache.maven.model.Dependency> dependencies = model.getDependencies();
+        if (dependencies != null) {
+            for (org.apache.maven.model.Dependency dependency : dependencies) {
+                String version = dependency.getVersion();
+                if (dependency.getGroupId().equals(groupId) && dependency.getArtifactId().equals(artifactId)) {
+                    return resolveVersion(version, properties);
+                }
+            }
+        }
+
+        // Check managed dependencies in dependencyManagement
+        DependencyManagement dependencyManagement = model.getDependencyManagement();
+        if (dependencyManagement != null) {
+            List<org.apache.maven.model.Dependency> managedDependencies = dependencyManagement.getDependencies();
+            if (managedDependencies != null) {
+                for (org.apache.maven.model.Dependency dependency : managedDependencies) {
+                    String version = dependency.getVersion();
+                    if (dependency.getGroupId().equals(groupId) && dependency.getArtifactId().equals(artifactId)) {
+                        return resolveVersion(version, properties);
+                    }
+                }
+            }
+        }
+
+        // Check properties for version
+        if (properties != null) {
+            String versionProperty = properties.getProperty(artifactId + ".version");
+            if (versionProperty != null && !versionProperty.isEmpty()) {
+                return versionProperty.trim();
+            }
+        }
+
+        // If version not found, recursively check parent POMs
+        if (model.getParent() != null) {
+            String parentPomUrl = String.format("https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.pom",
                     model.getParent().getGroupId().replace('.', '/'),
                     model.getParent().getArtifactId(),
                     model.getParent().getVersion(),
@@ -34,80 +90,25 @@ public class ParentPomReaderService {
                     model.getParent().getVersion());
 
             try (InputStreamReader readerStream = new InputStreamReader(new URL(parentPomUrl).openStream())) {
-                model = reader.read(readerStream);
+                Model parentModel = new MavenXpp3Reader().read(readerStream);
+                return findDependencyVersionRecursive(groupId, artifactId, parentModel);
             }
         }
 
-        return parentPomUrl;
+        return null;
     }
 
-    public String findDependencyVersion(String groupId, String artifactId, String parentPomUrl) throws IOException, XmlPullParserException {
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-
-        try (InputStreamReader readerStream = new InputStreamReader(new URL(parentPomUrl).openStream())) {
-            Model model = reader.read(readerStream);
-            Properties properties = model.getProperties();
-            // Check direct dependencies
-            List<org.apache.maven.model.Dependency> dependencies = model.getDependencies();
-            if (dependencies != null) {
-                for (org.apache.maven.model.Dependency dependency : dependencies) {
-                    String version = dependency.getVersion();
-                    if (dependency.getGroupId().equals(groupId) && dependency.getArtifactId().equals(artifactId)) {
-                        if (version.startsWith("${") && version.endsWith("}") && properties != null) {
-                            String propertyName = version.substring(2, version.length() - 1);
-                            String resolvedVersion = properties.getProperty(propertyName);
-                            if (resolvedVersion != null) {
-                                return resolvedVersion.trim();
-                            } else {
-                                // Handle case where property is not found
-                                return null; // Or throw an exception as needed
-                            }
-                        } else {
-                            // Version is already a concrete version number
-                            return version.trim();
-                        }
-                    }
-                }
+    private String resolveVersion(String version, Properties properties) {
+        if (version.startsWith("${") && version.endsWith("}") && properties != null) {
+            String propertyName = version.substring(2, version.length() - 1);
+            String resolvedVersion = properties.getProperty(propertyName);
+            if (resolvedVersion != null) {
+                return resolvedVersion.trim();
+            } else {
+                return null;
             }
-
-            // Check managed dependencies in dependencyManagement
-            DependencyManagement dependencyManagement = model.getDependencyManagement();
-            if (dependencyManagement != null) {
-                List<org.apache.maven.model.Dependency> managedDependencies = dependencyManagement.getDependencies();
-                if (managedDependencies != null) {
-                    for (org.apache.maven.model.Dependency dependency : managedDependencies) {
-                        String version = dependency.getVersion();
-                    if (dependency.getGroupId().equals(groupId) && dependency.getArtifactId().equals(artifactId)) {
-                        if (version.startsWith("${") && version.endsWith("}") && properties != null) {
-                            String propertyName = version.substring(2, version.length() - 1);
-                            String resolvedVersion = properties.getProperty(propertyName);
-                            if (resolvedVersion != null) {
-                                return resolvedVersion.trim();
-                            } else {
-                                // Handle case where property is not found
-                                return null; // Or throw an exception as needed
-                            }
-                        } else {
-                            // Version is already a concrete version number
-                            return version.trim();
-                        }
-                    }
-                    }
-                }
-            }
-            if (properties != null) {
-                String versionProperty = properties.getProperty(artifactId + ".version");
-                if (versionProperty != null && !versionProperty.isEmpty()) {
-                    return versionProperty.trim();
-                }
-            }
-        } catch (IOException | XmlPullParserException e) {
-            // Handle exceptions properly
-            e.printStackTrace();
-            throw e; // Propagate the exception or handle it according to your application's needs
+        } else {
+            return version.trim();
         }
-
-        return null; // Return null if dependency or version not found
     }
-    
 }
