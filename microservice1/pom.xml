@@ -13,6 +13,8 @@
     <description>First microservice</description>
     <properties>
         <java.version>17</java.version>
+        <junit.version>5.7.2</junit.version>
+        <slf4j.version>2.0.13</slf4j.version>       <!--write here 1.7.32, it automatically updates properties, not ${slf4j.version}-->
     </properties>
     <dependencies>
         <dependency>
@@ -64,6 +66,11 @@
         <artifactId>maven-model-builder</artifactId>
         <version>3.8.6</version>
     </dependency>
+     <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
     <!--<dependency>
     <groupId>org.codehaus.plexus</groupId>
     <artifactId>plexus-utils</artifactId>
