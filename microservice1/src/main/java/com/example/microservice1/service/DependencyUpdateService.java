@@ -47,9 +47,21 @@ public class DependencyUpdateService {
                 //log.info("{}", dependency);
                 if(dependency.getVersion().equals("Unknown")){
                     //continue;
-                    String parentUrl = parentPomReaderService.getParentPomDetails(pomFile.getAbsolutePath());
-                    dependency.setVersion(parentPomReaderService.findDependencyVersion(dependency.getGroupId(), dependency.getArtifactId(), parentUrl));
-
+                    if(currentDirFile.getAbsolutePath().contains("microservice1")){
+                        File parentDirFile = currentDirFile.getParentFile();
+                        pomFiles = pomFileScanner.findPomFiles(parentDirFile.getAbsolutePath());
+                    }
+                    String parentPomPath = parentPomReaderService.getParentPomPath(pomFile.getAbsolutePath(), pomFiles);
+                    String parentPomUrl = parentPomReaderService.getParentPomUrl(pomFile.getAbsolutePath());
+                    String parentVersion = parentPomReaderService.findDependencyVersion(dependency.getGroupId(), dependency.getArtifactId(), parentPomUrl);
+                    if(parentVersion != null){
+                        dependency.setVersion(parentVersion);
+                        if(parentPomPath != null){
+                            String str[] = parentPomPath.split("\\\\");
+                            String str1 = str[0] + "\\\\" + str[1] + "\\\\" + str[2];
+                            updateDependencies(str1);   //update parent too
+                        }
+                    }
                 }
                 log.info("{}", dependency);
                 List<Dependency> fetchedDependencies = nexusService.fetchDependencies(dependency.getGroupId(), dependency.getArtifactId());

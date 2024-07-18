@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.microservice1.Dependency;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,7 +20,7 @@ import java.util.Properties;
 @Service
 public class ParentPomReaderService {
 
-    public String getParentPomDetails(String pomFilePath) throws IOException, XmlPullParserException {
+    public String getParentPomUrl(String pomFilePath) throws IOException, XmlPullParserException {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         Model model = reader.read(new FileReader(pomFilePath));
         if (model.getParent() != null) {
@@ -71,10 +73,19 @@ public class ParentPomReaderService {
                 }
             }
         }
-
+        //for groupId = mockito.core, parent properties <mockito.version>
+        String str[] = groupId.split("\\.");
+        String str1 = "";
+        str1 += str[1];
+        if(str.length > 2){
+            str1 += "-" + str[2];
+            if(str.length > 3){
+                str1 += "-" + str[3];
+            }
+        }
         // Check properties for version
         if (properties != null) {
-            String versionProperty = properties.getProperty(artifactId + ".version");
+            String versionProperty = properties.getProperty(str1 + ".version");
             if (versionProperty != null && !versionProperty.isEmpty()) {
                 return versionProperty.trim();
             }
@@ -110,5 +121,22 @@ public class ParentPomReaderService {
         } else {
             return version.trim();
         }
+    }
+    public String getParentPomPath(String pomPath, List<File> pomFiles) throws FileNotFoundException, IOException, XmlPullParserException{
+        String currentDir = System.getProperty("user.dir");
+        String dir[] = currentDir.split("microservice1");
+        String microserviceDir = dir[0] + File.separator;
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = reader.read(new FileReader(pomPath));
+        File parentPom = null;
+        for(File file: pomFiles){
+            if(file.getAbsolutePath().contains(String.valueOf(model.getParent().getArtifactId()))){
+                parentPom = file;
+            }
+        }
+        if(parentPom != null){
+            return parentPom.getAbsolutePath();
+        }
+        return null;
     }
 }

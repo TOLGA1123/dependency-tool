@@ -31,6 +31,16 @@
             "args": "",
             "envFile": "${workspaceFolder}/.env",
             "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=63088 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=microservice1"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-Microservice2Application<microservice2>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.microservice2.Microservice2Application",
+            "projectName": "microservice2",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
