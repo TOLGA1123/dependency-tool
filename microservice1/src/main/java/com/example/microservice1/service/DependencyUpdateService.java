@@ -45,6 +45,9 @@ public class DependencyUpdateService {
             log.info("Dependencies:");
             for (Dependency dependency : dependencies) {
                 //log.info("{}", dependency);
+                if(dependency.getVersion().startsWith("${")){
+                    dependency.setVersion(parentPomReaderService.getPropertiesVersion(dependency.getVersion(), pomFile));
+                }
                 if(dependency.getVersion().equals("Unknown")){
                     //continue;
                     if(currentDirFile.getAbsolutePath().contains("microservice1")){

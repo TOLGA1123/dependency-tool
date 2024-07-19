@@ -139,4 +139,11 @@ public class ParentPomReaderService {
         }
         return null;
     }
+
+    public String getPropertiesVersion(String version, File pomFile) throws FileNotFoundException, IOException, XmlPullParserException {
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        Model model = reader.read(new FileReader(pomFile.getAbsolutePath()));
+        Properties properties = model.getProperties();
+        return resolveVersion(version, properties);
+    }
 }
